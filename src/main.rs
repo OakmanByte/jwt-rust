@@ -10,7 +10,7 @@ use lambda_http::{service_fn, Error};
 use lambda_runtime::LambdaEvent;
 
 use serde::{Deserialize};
-use serde_json::{json, Map, Value};
+use serde_json::{json, Value};
 
 
 #[derive(Debug, Deserialize)]
@@ -28,7 +28,12 @@ struct ClientRequest {
 async fn handler(event: LambdaEvent<Value>) -> Result<Value, Error> {
     // Extract some useful information from the request
     let body: Value = event.payload;
-    let client_request: ClientRequest = serde_json::from_value(body).unwrap();
+    let client_request: ClientRequest = match serde_json::from_value(body) {
+        Ok(client_request) => client_request,
+        Err(error) => {
+            return Err(Error::from(error));
+        }
+    };
 
     let key: Hmac<Sha256> = Hmac::new_from_slice(b"some-secret")?;
     let mut claims = BTreeMap::new();
@@ -62,10 +67,13 @@ async fn test() {
         "grant_type": "client_credentials"}"#;
     let input = serde_json::from_str(json_str).expect("failed to parse event");
     let context = lambda_runtime::Context::default();
-
     let event = lambda_runtime::LambdaEvent::new(input, context);
 
-    let resp = handler(event).await.unwrap();
+    let resp = match handler(event).await {
+        Ok(r) => r,
+        Err(e) => panic!("Error in handler: {:?}", e),
+    };
+
     let expected_response = json!({
     "message": "token: eyJhbGciOiJIUzI1NiJ9.eyJhdWRpZW5jZSI6InRocmVlIiwiY2xpZW50X2lkIjoib25lIiwiY2xpZW50X3NlY3JldCI6InR3byIsImdyYW50X3R5cGUiOiJjbGllbnRfY3JlZGVudGlhbHMiLCJ0ZW5hbnQiOiJmb3VyIn0.jr1GdFV-n6DmMOEJLGJe3UbkgiO9pHcFBHEI658Q-Ig"
     });
