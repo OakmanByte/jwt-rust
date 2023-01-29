@@ -67,6 +67,8 @@ async fn main() -> Result<(), Error> {
     Ok(())
 }
 
+
+///Tests
 #[tokio::test]
 async fn happy_path() {
     let json_str = r#"{
