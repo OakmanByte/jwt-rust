@@ -1,7 +1,14 @@
 # jwt-rust
 AWS lambda in rust for generating custom JSON Web Tokens
 
-Run test with this command:
+###Tests
+
+Run all tests with command:
+`
+cargo test -- --nocapture
+`
+
+For specific test
 `
 cargo test -- --nocapture <test_name>
 `
